@@ -1,8 +1,11 @@
 import React, { useRef, useEffect } from 'react';
 import './App.css';
-import videoSources from './videoSources';
+import videoSource from './videos/mivideo.mp4';
+import videoSource1 from './videos/mivideo1.mp4';
+import videoSource2 from './videos/mivideo2.mp4'; // Asegúrate de que este import sea correcto
 
 function App() {
+  const videoSources = [videoSource, videoSource1, videoSource2]; // Lista de tus videos
   const videoRefs = useRef([]);
 
   useEffect(() => {
