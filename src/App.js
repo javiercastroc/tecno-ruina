@@ -24,7 +24,7 @@ function App() {
 
   return (
     <div className="App">
-      <h1 className="title">Título de la Página</h1>
+      <h1 className="title">Tecno Ruína</h1>
 
 
       
