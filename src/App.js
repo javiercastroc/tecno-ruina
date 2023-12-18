@@ -1,40 +1,91 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import './App.css';
 import videoSources from './videoSources';
 
 function App() {
   const videoRefs = useRef([]);
+  const [autoplayWithSound, setAutoplayWithSound] = useState(false);
 
+  // Configuración de la API de Intersección
   useEffect(() => {
     videoRefs.current = videoRefs.current.slice(0, videoSources.length);
-  }, [videoSources.length]);
 
-  const handleVideoEnd = (index) => () => {
-    const nextVideoIndex = index + 1;
-    if (nextVideoIndex < videoSources.length) {
-      const nextVideo = videoRefs.current[nextVideoIndex];
-      nextVideo.scrollIntoView({ behavior: 'smooth' });
-      setTimeout(() => {
-        if (nextVideo && typeof nextVideo.play === 'function') {
-          nextVideo.play();
-        }
-      }, 500);
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          console.log(`Video ${entry.target.id} is intersecting: ${entry.isIntersecting}`);
+          const video = entry.target;
+          if (autoplayWithSound && entry.isIntersecting) {
+            video.muted = false;
+            video.play().catch(e => console.log('Error al reproducir el video:', e));
+          } else {
+            video.pause();
+          }
+        });
+      },
+      { threshold: [0.1, 0.9] } // Ajustar umbrales según sea necesario
+    );
+    
+
+    videoRefs.current.forEach(video => {
+      if (video) observer.observe(video);
+    });
+
+    
+
+    return () => {
+      videoRefs.current.forEach(video => {
+        if (video) observer.unobserve(video);
+      });
+    };
+  }, [autoplayWithSound]);
+
+  const scrollToCenter = (videoElement) => {
+    if (videoElement) {
+      const videoPosition = videoElement.getBoundingClientRect().top + window.pageYOffset - (window.innerHeight / 2) + (videoElement.clientHeight / 2);
+      window.scrollTo({ top: videoPosition, behavior: 'smooth' });
     }
   };
+  
+  const togglePlayback = () => {
+    if (autoplayWithSound) {
+      // Detener todos los videos
+      videoRefs.current.forEach(video => video && video.pause());
+      setAutoplayWithSound(false);
+    } else {
+      setAutoplayWithSound(true);
+      const firstVideo = videoRefs.current[0];
+      if (firstVideo) {
+        firstVideo.muted = false;
+        firstVideo.play().catch(e => console.log('Error al reproducir el video:', e));
+        scrollToCenter(firstVideo);
+      }
+    }
+  };
+  
+  const handleVideoEnd = (index) => () => {
+    const nextVideoIndex = (index + 1) % videoSources.length;
+    const nextVideo = videoRefs.current[nextVideoIndex];
+    if (autoplayWithSound) {
+      nextVideo.muted = false;
+      nextVideo.play().catch(e => console.log('Error al reproducir el video:', e));
+      scrollToCenter(nextVideo);
+    }
+  };
+  
 
   return (
     <div className="App">
       <h1 className="title">Tecno Ruina</h1>
-
-
-      
+      <button onClick={togglePlayback} className="playback-button">
+        {autoplayWithSound ? "Stop Videos" : "Play Videos"}
+      </button> 
       {videoSources.map((source, index) => (
         <React.Fragment key={index}>
           <div className="video-container">
             <video
               ref={(el) => (videoRefs.current[index] = el)}
-              autoPlay={index === 0}
-              controls
+              muted={!autoplayWithSound}
               className="centered-video"
               onEnded={handleVideoEnd(index)}
             >
