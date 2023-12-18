@@ -87,6 +87,7 @@ function VideoPlayer({ videoSources }) {
               muted={!autoplayWithSound}
               className="centered-video"
               onEnded={handleVideoEnd(index)}
+              playsInline
             >
               <source src={source} type="video/mp4" />
             </video>

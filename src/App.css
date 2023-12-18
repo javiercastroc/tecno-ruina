@@ -13,15 +13,15 @@
 }
 
 .video-container {
-  width: 80vh; /* Ajusta según sea necesario */
-  height: 80vh; /* Ajusta según sea necesario */
-  overflow: hidden;
+  width: 100%; /* Ocupa todo el ancho disponible */
+  margin: auto; /* Centrar el contenedor si es necesario */
 }
 
 .centered-video {
-  width: 100%;
-  height: auto;
+  width: 100%; /* Ocupa todo el ancho del contenedor */
+  height: auto; /* Mantiene la relación de aspecto */
 }
+
 
 .spacer {
   height: 100vh; /* Altura de una pantalla completa */
