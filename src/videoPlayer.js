@@ -1,8 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import './App.css';
-import videoSources from './videoSources';
 
-function App() {
+function VideoPlayer({ videoSources }) {
   const videoRefs = useRef([]);
   const [autoplayWithSound, setAutoplayWithSound] = useState(false);
 
@@ -99,4 +98,4 @@ function App() {
   );
 }
 
-export default App;
+export default VideoPlayer;
