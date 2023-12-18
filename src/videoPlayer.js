@@ -1,8 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import './App.css';
-import videoSources from './videoSources';
 
-function App() {
+function VideoPlayer({ videoSources }) {
   const videoRefs = useRef([]);
 
   useEffect(() => {
@@ -25,9 +24,6 @@ function App() {
   return (
     <div className="App">
       <h1 className="title">Tecno Ruina</h1>
-
-
-      
       {videoSources.map((source, index) => (
         <React.Fragment key={index}>
           <div className="video-container">
@@ -48,4 +44,4 @@ function App() {
   );
 }
 
-export default App;
+export default VideoPlayer;
