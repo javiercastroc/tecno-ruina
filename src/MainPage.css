@@ -1,0 +1,17 @@
+.main-page-button {
+    background-color: #008CBA; /* Blue */
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 14px;
+    margin: 5px 3px;
+    cursor: pointer;
+    border-radius: 4px;
+  }
+  
+  .main-page-button:hover {
+    background-color: #007B9A;
+  }
