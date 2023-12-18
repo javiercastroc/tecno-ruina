@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import videoSources from './videoSources';
+import videoSources from './videoSourcesALL';
 import './MainPage.css';
 
 function MainPage() {
