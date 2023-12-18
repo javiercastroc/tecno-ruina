@@ -1,1 +1,0 @@
-export default ["./videos/mivideo.mp4","./videos/mivideo1.mp4","./videos/mivideo2.mp4"];

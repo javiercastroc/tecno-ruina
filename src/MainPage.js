@@ -8,6 +8,7 @@ function MainPage() {
 
   return (
     <div>
+      <h1 className="title">Tecno Ruina</h1>
       {Object.keys(videoSources).map((key, index) => (
         <button key={index} className="main-page-button" onClick={() => navigate(`/videos/${key}`)}>
           Ver {key}
