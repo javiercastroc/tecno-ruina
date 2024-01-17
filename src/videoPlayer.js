@@ -1,28 +1,46 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback  } from 'react';
 import './App.css';
 
-function VideoPlayer({ videoSources }) {
+function VideoPlayer({ videoSources,bufferSize = 3  }) {
   const videoRefs = useRef([]);
+  const [loadedVideos, setLoadedVideos] = useState([]);
   const [autoplayWithSound, setAutoplayWithSound] = useState(false);
 
-  // Configuración de la API de Intersección
-  useEffect(() => {
-    videoRefs.current = videoRefs.current.slice(0, videoSources.length);
+  // Cargar videos según la necesidad
+  const loadVideos = useCallback(() => {
+    const loaded = videoSources.slice(0, bufferSize).map((source, index) => ({ source, index }));
+    setLoadedVideos(loaded);
+  }, [videoSources, bufferSize]);
 
+  useEffect(() => {
+    loadVideos();
+  }, [loadVideos]);
+
+  // Configuración de la API de Intersección y manejo del buffer
+  useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach(entry => {
-          console.log(`Video ${entry.target.id} is intersecting: ${entry.isIntersecting}`);
-          const video = entry.target;
-          if (autoplayWithSound && entry.isIntersecting) {
-            video.muted = false;
-            video.play().catch(e => console.log('Error al reproducir el video:', e));
+          //console.log(`Video ${entry.target.id} is intersecting: ${entry.isIntersecting}`);
+          const videoIndex = videoRefs.current.findIndex(v => v === entry.target);
+          if (autoplayWithSound && entry.isIntersecting && videoIndex >= 0) {
+            entry.target.muted = false;
+            entry.target.play().catch(e => console.log('Error al reproducir el video:', e));
           } else {
-            video.pause();
+            entry.target.pause();
+          }
+
+          // Actualización dinámica del buffer
+          if (entry.isIntersecting) {
+            const newLoadedVideos = [...loadedVideos];
+            if (!newLoadedVideos.some(v => v.index === videoIndex + 1) && videoSources[videoIndex + 1]) {
+              newLoadedVideos.push({ source: videoSources[videoIndex + 1], index: videoIndex + 1 });
+            }
+            setLoadedVideos(newLoadedVideos.slice(-bufferSize));
           }
         });
       },
-      { threshold: [0.1, 0.9] } // Ajustar umbrales según sea necesario
+      { threshold: [0.1, 0.9] }
     );
     
 
@@ -37,7 +55,9 @@ function VideoPlayer({ videoSources }) {
         if (video) observer.unobserve(video);
       });
     };
-  }, [autoplayWithSound]);
+  }, [autoplayWithSound, loadedVideos, bufferSize, videoSources]);
+
+
 
   const scrollToCenter = (videoElement) => {
     if (videoElement) {
