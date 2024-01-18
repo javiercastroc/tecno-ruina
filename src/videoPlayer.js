@@ -1,61 +1,86 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import './App.css';
 
-function VideoPlayer({ videoSources }) {
+function VideoPlayer({ videoSources, bufferSize = 4  }) {
   const videoRefs = useRef([]);
   const [autoplayWithSound, setAutoplayWithSound] = useState(false);
+  const [loadedVideos, setLoadedVideos] = useState([]);
 
-  // Configuración de la API de Intersección
+  const updateLoadedVideos = useCallback((currentVideoIndex = 0) => {
+    // Calcula los índices de inicio y fin para cargar los videos en el buffer
+    const startIndex = Math.max(currentVideoIndex - Math.floor(bufferSize / 2), 0);
+    let endIndex = startIndex + bufferSize;
+  
+    const loaded = [];
+    const addedIndices = new Set();
+    
+    for (let i = startIndex; i < endIndex; i++) {
+      const adjustedIndex = i % videoSources.length; // Ajustar índice para el buffer circular
+      if (!addedIndices.has(adjustedIndex)) {
+        loaded.push({
+          source: videoSources[adjustedIndex],
+          index: adjustedIndex
+        });
+        addedIndices.add(adjustedIndex);
+      };
+    }
+  
+    setLoadedVideos(loaded);
+  }, [videoSources, bufferSize]);
+
   useEffect(() => {
-    videoRefs.current = videoRefs.current.slice(0, videoSources.length);
+    updateLoadedVideos(0);
+  }, [updateLoadedVideos, videoSources]);
 
+  useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach(entry => {
-          console.log(`Video ${entry.target.id} is intersecting: ${entry.isIntersecting}`);
-          const video = entry.target;
-          if (autoplayWithSound && entry.isIntersecting) {
-            video.muted = false;
-            video.play().catch(e => console.log('Error al reproducir el video:', e));
-          } else {
-            video.pause();
+          const videoIndex = videoRefs.current.findIndex(v => v === entry.target);
+          if (videoIndex >= 0) {
+            setTimeout(() => {
+              const video = videoRefs.current[videoIndex];
+              if (entry.isIntersecting && autoplayWithSound) {
+                updateLoadedVideos(videoIndex);
+                video.muted = false;
+                video.play().catch(e => {
+                  console.log('Error al reproducir el video:', e);
+                });
+              } else {
+                if (video){video.pause();}
+              }
+            }, 500);
           }
         });
       },
-      { threshold: [0.1, 0.9] } // Ajustar umbrales según sea necesario
+      { threshold: 0.5 }
     );
-    
-
-    videoRefs.current.forEach(video => {
+  
+    loadedVideos.forEach(({ index }) => {
+      const video = videoRefs.current[index];
       if (video) observer.observe(video);
     });
-
-    
-
+  
     return () => {
-      videoRefs.current.forEach(video => {
+      loadedVideos.forEach(({ index }) => {
+        const video = videoRefs.current[index];
         if (video) observer.unobserve(video);
       });
     };
-  }, [autoplayWithSound]);
+  }, [autoplayWithSound, loadedVideos, updateLoadedVideos]);
 
   const scrollToCenter = (videoElement) => {
     if (videoElement) {
-      const videoPosition = videoElement.getBoundingClientRect().top + window.pageYOffset - (window.innerHeight / 2) + (videoElement.clientHeight / 2);
+      const videoPosition = videoElement.getBoundingClientRect().top + window.scrollY - (window.innerHeight / 2) + (videoElement.clientHeight / 2);
       window.scrollTo({ top: videoPosition, behavior: 'smooth' });
     }
   };
   
   const togglePlayback = () => {
-    if (autoplayWithSound) {
-      // Detener todos los videos
-      videoRefs.current.forEach(video => video && video.pause());
-      setAutoplayWithSound(false);
-    } else {
-      setAutoplayWithSound(true);
+    setAutoplayWithSound(!autoplayWithSound);
+    if (!autoplayWithSound) {
       const firstVideo = videoRefs.current[0];
       if (firstVideo) {
-        firstVideo.muted = false;
         firstVideo.play().catch(e => console.log('Error al reproducir el video:', e));
         scrollToCenter(firstVideo);
       }
@@ -64,10 +89,11 @@ function VideoPlayer({ videoSources }) {
   
   const handleVideoEnd = (index) => () => {
     const nextVideoIndex = (index + 1) % videoSources.length;
+    //updateLoadedVideos(nextVideoIndex);
     const nextVideo = videoRefs.current[nextVideoIndex];
-    if (autoplayWithSound) {
-      nextVideo.muted = false;
-      nextVideo.play().catch(e => console.log('Error al reproducir el video:', e));
+    if (nextVideo && autoplayWithSound) {
+      //nextVideo.muted = false;
+      //nextVideo.play().catch(e => console.log('Error al reproducir el video:', e));
       scrollToCenter(nextVideo);
     }
   };
@@ -78,8 +104,8 @@ function VideoPlayer({ videoSources }) {
       <h1 className="title">Tecno Ruina</h1>
       <button onClick={togglePlayback} className="playback-button">
         {autoplayWithSound ? "Stop Videos" : "Play Videos"}
-      </button> 
-      {videoSources.map((source, index) => (
+      </button>
+      {loadedVideos.map(({ source, index }) => (
         <React.Fragment key={index}>
           <div className="video-container">
             <video
@@ -96,7 +122,7 @@ function VideoPlayer({ videoSources }) {
         </React.Fragment>
       ))}
     </div>
-  );
+  );  
 }
 
 export default VideoPlayer;
