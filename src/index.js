@@ -1,5 +1,5 @@
 import React from 'react';
-import ReactDOM from 'react-dom/client';
+import ReactDOM from 'react-dom';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './index.css';
 import MainPage from './MainPage';
@@ -7,8 +7,8 @@ import VideoPlayer from './videoPlayer';
 import videoSources from './videoSourcesALL';
 import reportWebVitals from './reportWebVitals';
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(
+
+ReactDOM.render( // Cambio aquí
   <React.StrictMode>
     <Router>
       <Routes>
@@ -18,7 +18,8 @@ root.render(
         ))}
       </Routes>
     </Router>
-  </React.StrictMode>
+  </React.StrictMode>,
+  document.getElementById('root')
 );
 
 reportWebVitals();
